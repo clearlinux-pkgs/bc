@@ -1,0 +1,11 @@
+--- bc-1.03/configure~	1994-11-03 17:45:26.000000000 -0500
++++ bc-1.03/configure	2014-12-08 21:27:13.191378415 -0500
+@@ -260,7 +260,7 @@
+   | --x-librar=* | --x-libra=* | --x-libr=* | --x-lib=* | --x-li=* | --x-l=*)
+     x_libraries="$ac_optarg" ;;
+ 
+-  -*) { echo "configure: error: $ac_option: invalid option; use --help to show usage" 1>&2; exit 1; }
++  -*) { echo "configure: error: $ac_option: invalid option; use --help to show usage" 1>&2;  }
+     ;;
+ 
+   *) 
