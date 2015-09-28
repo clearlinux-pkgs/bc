@@ -4,7 +4,7 @@
 #
 Name     : bc
 Version  : 1.06
-Release  : 10
+Release  : 11
 URL      : http://ftp.gnu.org/gnu/bc/bc-1.06.tar.gz
 Source0  : http://ftp.gnu.org/gnu/bc/bc-1.06.tar.gz
 Summary  : No detailed summary available
