@@ -1,11 +1,30 @@
---- bc-1.03/configure~	1994-11-03 17:45:26.000000000 -0500
-+++ bc-1.03/configure	2014-12-08 21:27:13.191378415 -0500
-@@ -260,7 +260,7 @@
+From 88ed4ea6e91b1aee2d4c4f6dd7cb2d23d4410506 Mon Sep 17 00:00:00 2001
+From: Ikey Doherty <michael.i.doherty@intel.com>
+Date: Mon, 7 Mar 2016 15:23:28 +0000
+Subject: [PATCH] Unbreak configure
+
+Signed-off-by: Ikey Doherty <michael.i.doherty@intel.com>
+---
+ configure | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/configure b/configure
+index 2f162f0..33b3023 100755
+--- a/configure
++++ b/configure
+@@ -623,10 +623,8 @@ do
    | --x-librar=* | --x-libra=* | --x-libr=* | --x-lib=* | --x-li=* | --x-l=*)
-     x_libraries="$ac_optarg" ;;
+     x_libraries=$ac_optarg ;;
  
--  -*) { echo "configure: error: $ac_option: invalid option; use --help to show usage" 1>&2; exit 1; }
-+  -*) { echo "configure: error: $ac_option: invalid option; use --help to show usage" 1>&2;  }
-     ;;
+-  -*) { echo "$as_me: error: unrecognized option: $ac_option
+-Try \`$0 --help' for more information." >&2
+-   { (exit 1); exit 1; }; }
+-    ;;
++  -*)
++    ignore_and_skip=yes ;;
  
-   *) 
+   *=*)
+     ac_envvar=`expr "x$ac_option" : 'x\([^=]*\)='`
+-- 
+2.7.1
+
