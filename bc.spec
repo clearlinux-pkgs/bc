@@ -4,7 +4,7 @@
 #
 Name     : bc
 Version  : 1.06.95
-Release  : 13
+Release  : 14
 URL      : http://alpha.gnu.org/gnu/bc/bc-1.06.95.tar.bz2
 Source0  : http://alpha.gnu.org/gnu/bc/bc-1.06.95.tar.bz2
 Summary  : No detailed summary available
