@@ -6,7 +6,7 @@
 #
 Name     : bc
 Version  : 1.07.1
-Release  : 16
+Release  : 17
 URL      : http://ftp.gnu.org/gnu/bc/bc-1.07.1.tar.gz
 Source0  : http://ftp.gnu.org/gnu/bc/bc-1.07.1.tar.gz
 Source99 : http://ftp.gnu.org/gnu/bc/bc-1.07.1.tar.gz.sig
