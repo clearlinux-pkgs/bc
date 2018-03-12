@@ -6,10 +6,10 @@
 #
 Name     : bc
 Version  : 1.07.1
-Release  : 17
-URL      : http://ftp.gnu.org/gnu/bc/bc-1.07.1.tar.gz
-Source0  : http://ftp.gnu.org/gnu/bc/bc-1.07.1.tar.gz
-Source99 : http://ftp.gnu.org/gnu/bc/bc-1.07.1.tar.gz.sig
+Release  : 18
+URL      : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz
+Source0  : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz
+Source99 : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz.sig
 Summary  : No detailed summary available
 Group    : Development/Tools
 License  : GPL-2.0+ GPL-3.0 LGPL-3.0
@@ -46,20 +46,23 @@ doc components for the bc package.
 %setup -q -n bc-1.07.1
 
 %build
+export http_proxy=http://127.0.0.1:9/
+export https_proxy=http://127.0.0.1:9/
+export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1492373310
+export SOURCE_DATE_EPOCH=1520829177
 %configure --disable-static
-make V=1  %{?_smp_mflags}
+make  %{?_smp_mflags}
 
 %check
 export LANG=C
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
-export no_proxy=localhost
+export no_proxy=localhost,127.0.0.1,0.0.0.0
 make VERBOSE=1 V=1 %{?_smp_mflags} check
 
 %install
-export SOURCE_DATE_EPOCH=1492373310
+export SOURCE_DATE_EPOCH=1520829177
 rm -rf %{buildroot}
 %make_install
 
