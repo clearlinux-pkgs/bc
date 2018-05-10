@@ -6,7 +6,7 @@
 #
 Name     : bc
 Version  : 1.07.1
-Release  : 18
+Release  : 19
 URL      : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz
 Source0  : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz
 Source99 : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz.sig
