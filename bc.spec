@@ -6,15 +6,16 @@
 #
 Name     : bc
 Version  : 1.07.1
-Release  : 19
+Release  : 20
 URL      : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz
 Source0  : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz
 Source99 : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz.sig
-Summary  : No detailed summary available
+Summary  : An arbitrary precision calculator language
 Group    : Development/Tools
 License  : GPL-2.0+ GPL-3.0 LGPL-3.0
-Requires: bc-bin
-Requires: bc-doc
+Requires: bc-bin = %{version}-%{release}
+Requires: bc-license = %{version}-%{release}
+Requires: bc-man = %{version}-%{release}
 BuildRequires : bison
 BuildRequires : ed
 BuildRequires : flex
@@ -29,6 +30,7 @@ for editing input lines when run interactive.
 %package bin
 Summary: bin components for the bc package.
 Group: Binaries
+Requires: bc-license = %{version}-%{release}
 
 %description bin
 bin components for the bc package.
@@ -37,9 +39,26 @@ bin components for the bc package.
 %package doc
 Summary: doc components for the bc package.
 Group: Documentation
+Requires: bc-man = %{version}-%{release}
 
 %description doc
 doc components for the bc package.
+
+
+%package license
+Summary: license components for the bc package.
+Group: Default
+
+%description license
+license components for the bc package.
+
+
+%package man
+Summary: man components for the bc package.
+Group: Default
+
+%description man
+man components for the bc package.
 
 
 %prep
@@ -50,7 +69,14 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1520829177
+export SOURCE_DATE_EPOCH=1557075430
+export AR=gcc-ar
+export RANLIB=gcc-ranlib
+export NM=gcc-nm
+export CFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
+export FCFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
+export FFLAGS="$CFLAGS -O3 -ffat-lto-objects -flto=4 "
+export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 "
 %configure --disable-static
 make  %{?_smp_mflags}
 
@@ -62,8 +88,11 @@ export no_proxy=localhost,127.0.0.1,0.0.0.0
 make VERBOSE=1 V=1 %{?_smp_mflags} check
 
 %install
-export SOURCE_DATE_EPOCH=1520829177
+export SOURCE_DATE_EPOCH=1557075430
 rm -rf %{buildroot}
+mkdir -p %{buildroot}/usr/share/package-licenses/bc
+cp COPYING %{buildroot}/usr/share/package-licenses/bc/COPYING
+cp COPYING.LIB %{buildroot}/usr/share/package-licenses/bc/COPYING.LIB
 %make_install
 
 %files
@@ -75,6 +104,15 @@ rm -rf %{buildroot}
 /usr/bin/dc
 
 %files doc
-%defattr(-,root,root,-)
+%defattr(0644,root,root,0755)
 %doc /usr/share/info/*
-%doc /usr/share/man/man1/*
+
+%files license
+%defattr(0644,root,root,0755)
+/usr/share/package-licenses/bc/COPYING
+/usr/share/package-licenses/bc/COPYING.LIB
+
+%files man
+%defattr(0644,root,root,0755)
+/usr/share/man/man1/bc.1
+/usr/share/man/man1/dc.1
