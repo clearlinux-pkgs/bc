@@ -6,14 +6,15 @@
 #
 Name     : bc
 Version  : 1.07.1
-Release  : 20
+Release  : 21
 URL      : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz
 Source0  : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz
-Source99 : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz.sig
-Summary  : An arbitrary precision calculator language
+Source1 : https://mirrors.kernel.org/gnu/bc/bc-1.07.1.tar.gz.sig
+Summary  : No detailed summary available
 Group    : Development/Tools
 License  : GPL-2.0+ GPL-3.0 LGPL-3.0
 Requires: bc-bin = %{version}-%{release}
+Requires: bc-info = %{version}-%{release}
 Requires: bc-license = %{version}-%{release}
 Requires: bc-man = %{version}-%{release}
 BuildRequires : bison
@@ -36,13 +37,12 @@ Requires: bc-license = %{version}-%{release}
 bin components for the bc package.
 
 
-%package doc
-Summary: doc components for the bc package.
-Group: Documentation
-Requires: bc-man = %{version}-%{release}
+%package info
+Summary: info components for the bc package.
+Group: Default
 
-%description doc
-doc components for the bc package.
+%description info
+info components for the bc package.
 
 
 %package license
@@ -63,13 +63,15 @@ man components for the bc package.
 
 %prep
 %setup -q -n bc-1.07.1
+cd %{_builddir}/bc-1.07.1
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
-export LANG=C
-export SOURCE_DATE_EPOCH=1557075430
+export LANG=C.UTF-8
+export SOURCE_DATE_EPOCH=1573770999
+export GCC_IGNORE_WERROR=1
 export AR=gcc-ar
 export RANLIB=gcc-ranlib
 export NM=gcc-nm
@@ -81,18 +83,18 @@ export CXXFLAGS="$CXXFLAGS -O3 -ffat-lto-objects -flto=4 "
 make  %{?_smp_mflags}
 
 %check
-export LANG=C
+export LANG=C.UTF-8
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 make VERBOSE=1 V=1 %{?_smp_mflags} check
 
 %install
-export SOURCE_DATE_EPOCH=1557075430
+export SOURCE_DATE_EPOCH=1573770999
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/share/package-licenses/bc
-cp COPYING %{buildroot}/usr/share/package-licenses/bc/COPYING
-cp COPYING.LIB %{buildroot}/usr/share/package-licenses/bc/COPYING.LIB
+cp %{_builddir}/bc-1.07.1/COPYING %{buildroot}/usr/share/package-licenses/bc/8624bcdae55baeef00cd11d5dfcfa60f68710a02
+cp %{_builddir}/bc-1.07.1/COPYING.LIB %{buildroot}/usr/share/package-licenses/bc/e7d563f52bf5295e6dba1d67ac23e9f6a160fab9
 %make_install
 
 %files
@@ -103,14 +105,15 @@ cp COPYING.LIB %{buildroot}/usr/share/package-licenses/bc/COPYING.LIB
 /usr/bin/bc
 /usr/bin/dc
 
-%files doc
+%files info
 %defattr(0644,root,root,0755)
-%doc /usr/share/info/*
+/usr/share/info/bc.info
+/usr/share/info/dc.info
 
 %files license
 %defattr(0644,root,root,0755)
-/usr/share/package-licenses/bc/COPYING
-/usr/share/package-licenses/bc/COPYING.LIB
+/usr/share/package-licenses/bc/8624bcdae55baeef00cd11d5dfcfa60f68710a02
+/usr/share/package-licenses/bc/e7d563f52bf5295e6dba1d67ac23e9f6a160fab9
 
 %files man
 %defattr(0644,root,root,0755)
