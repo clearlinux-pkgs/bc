@@ -1,7 +1,6 @@
 # This file contains recursive sources that require this package
 LyX
 edk2
-gtk-doc
 linux-tools
 rrdtool
 xscreensaver
