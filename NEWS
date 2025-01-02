@@ -1,11 +1,33 @@
-This is GNU bc version 1.07.1.  (And dc version 1.4.1)
+This is GNU bc version 1.08.0.  (And dc version 1.5.0)
+
+Changes in bc from 1.07.1 to 1.08.0.
+    Streamlined the build process; should now be better behaved for those
+      doing cross-compilation builds.
+    Made some minor improvements to the documentation.
+
+Changes in dc 1.4.1 to 1.5.0.
+    Added support for GNU readline (--with-readline)
+      and BSD libedit (--with-libedit)
+    Provided for compile-time disabling of the `!' command for sandboxed
+      environments (./configure --disable-dc-bang-shell).
+    The ill-designed 'a' command is now deprecated.
+    New --max-recursion=$depth command-line option, to facilitate
+      testing (especially fuzzing) without run-away memory consumption.
+    More consistent behavior for error handling --- if an error message
+      is emitted about the arguments passed on the top-of-stack,
+      then the stack should always be left unchanged.
+    Changed the internal representation of arrays (should perform better
+      for most access patterns on large arrays).
+    Made some minor improvements to the documentation.
+    Bug fixes.
+    Much other internal code re-organization and clean-up.
 
 Changes in bc from 1.07 to 1.07.1.
     Fixed ibase extension causing problems for read()
     Fixed parallel make problem.
 
 Changes in dc 1.4 to 1.4.1.
-    Fixed dc "Q" comanmd bug.
+    Fixed dc "Q" command bug.
 
 Changes in bc from 1.06 to 1.07.
     Added void functions.
@@ -36,13 +58,13 @@ Changes in dc from 1.2 to 1.3:
     New multiply algorithm of bc.
 
 Changes in bc from 1.05 to 1.06:
-    New multiply algoirthm and many other changes in lib/number.c
+    New multiply algorithm and many other changes in lib/number.c
     Function size now done dynamically.
     Function syntax in non-posix mode allows newlines in more places.
     Bug fixes:
 	improved computation of j(n,x).
 	enables readline only if interactive.
-	for statment bug fixed.
+	for statement bug fixed.
 	use int instead of char for readline char counts.
 	improved cosine accuracy.
 

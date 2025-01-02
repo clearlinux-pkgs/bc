@@ -1,9 +1,313 @@
+Fri Dec 27 04:50:56 PST 2024 <ken@gnu.org> 
+	* dc/dc-proto.h dc/eval.c dc/input.c dc/string.c:
+	  Make further refinements to how input is handled, and in
+	  particular ensuring that both builds with --with-readline,
+	  --with-libinput, or neither, are all well-behaved.
+
+Thu Dec 26 17:13:59 PST 2024 <ken@gnu.org> 
+	* dc/dc.c: The fix of Wed Mar 16 16:44:49 PDT 2022
+	  got the handling of "-f" vs command-line arguments
+	  backwards: fall-through to reading stdin should
+	  be happening if (arguments || !(-e || -f)).  Fixed.
+
+Thu Dec 26 01:03:53 PST 2024 Ken Pizzini <ken@gnu.org> 
+	* doc/bc.texi, doc/dc.texi, doc/bc.1: Apply edits
+	  to the copyright statment blurb.
+	* doc/bc.1: Fix some groff stylistic lint, as recommmended
+	  in a bug report from Bjarni Ingi Gislason.
+
+Sat Oct 12 12:48:54 PDT 2024 Ken Pizzini <ken@gnu.org> 
+	* dc/dc-proto.h, dc/dc.c, dc/eval.c:
+	  Line editing (readline/libedit) should only be enabled
+	  if the session is interactive; add a "--interactive"
+	  flag to force the issue, and otherwise default to
+	  isatty(stdin) for auto-detection.  (If isatty() is
+	  not supported, default is "never interactive".)
+	* dc/input.c:
+	  Re-factor how the three cases (readline/libedit/stdio)
+	  are handled.
+
+Tue Oct  8 01:58:14 PDT 2024 Ken Pizzini <ken@gnu.org> 
+	* dc/Makefile.am, dc/dc-proto.h, dc/input.c, dc/eval.c:
+	  add support for GNU readline (--with-readline) and
+	  BSD libedit (--with-libedit) to dc (bc has already
+	  had this support for quite some time).
+
+Fri Apr  5 03:06:36 PDT 2024 Ken Pizzini <ken@gnu.org> 
+	* doc/bc.texi, doc/dc.texi: add a "@dircategory Math" annotation
+	  for the benefit of auto-generated "info/dir" files.
+
+Tue Mar 26 00:01:14 PDT 2024 Ken Pizzini <ken@gnu.org> 
+	* configure.ac: update PROG_LEX check to remove yywrap warning
+	* doc/dc.1: Modern practice is to distinguish ASCII
+	  "hyphen-minus" from regular hyphens in man pages
+	  by escaping: \- for hyphen-minus and plain - for
+	  hyphen-as-itself.  Update man pages to match.
+	* dc/dc.c: if try_file() is passed in a NULL filename (meaning
+	  "use stdin"), we were relying on perror() and fprintf() to
+	  render the NULL as "(null)".  This is both fragile and less
+	  user friendly; output "(stdin)" instead in these cases.
+	* bc/bc.y: fix typo in warning message (s/expresion/expression/)
+	  (Thanks: Debian bug report)
+	* bc/Makefile.am, bc/global.c, bc/fix-libmath_h, bc/fix-libmath.sed:
+	  change recipe for bootstrapping libmath.h in order to:
+	    . avoid circular dependency in recursive make for a bootstrap
+	      version of global.o which is distinct from the main build
+	      of global.o (Thanks: Debian bug report);
+	    . remove dependency on "ed" (configure already relies on "sed",
+	      so use that instead).
+
+Tue Mar  5 15:21:19 PST 2024 Ken Pizzini <ken@gnu.org> 
+	* dc/numeric.c:
+	  Somehow the prototype for out_char() never got updated from
+	  the K&R C style to the ANSI/ISO C style back in May 2017 when
+	  the rest of the support for pre-ANSI (1989) C was dropped.
+	  Since K&R prototypes are deprecated by C17 and expected to be
+	  disallowed in C2x, fix this anomaly by using a "modern" style
+	  prototype for out_char().
+
+Wed Mar 16 16:44:49 PDT 2022 Ken Pizzini <ken@gnu.org> 
+	* dc/eval.c, dc/dc.c: 
+	  . The warning about a too-deep Q command got lost in the big
+	    recursion-handling rewrite; added it back (bug reported by
+	    Ralph Corderoy - thanks!).
+	  . Ralph Corderoy also noted that the behavior of "dc scriptfile"
+	    does not match the documentation (nor the historical Bell Labs dc
+	    behavior); updated GNU dc to actually read stdin after reading
+	    script files, like the documentation says it should.
+	  . If stdin is a tty, it may legitimately return EOF more than once;
+	    allow for this.
+	  . Fixed a bug where dc_evalstr() did not allow for cmd_stack going
+	    NULL in the cleanup code.
+	  . Added a distinction between exit_success (i.e. a "q" command) and
+	    return_success (i.e., saw EOF) in dc_evalfile() [dc_evalstr()
+	    already did this correctly].
+
+Wed Mar  9 22:05:21 PST 2022 Ken Pizzini <ken@gnu.org> 
+	* dc/eval.c, dc/dc.c, dc/dc-proto.h, dc/dc.h: Clean-up the interface
+	  to dc_evalstr(): it should not be the business of dc.c to
+	  create a dc_data wrapper around the string-to-be-evaluated
+	  by dc_evalstr() - that should be an implementation detail
+	  of dc_evalstr().  We now just pass in an ordinary C-style
+	  "const char*" string.
+
+	  Also, note all three return value possibilities
+	  from dc_evalstr() from within main(); fix a typo in
+	  DC_EXIT_REQUEST spelling (thanks Ralph Corderoy); and always
+	  clean up the cmdstack before returning from dc_evalstr()
+	  (regardless of return value).
+
+Thu Feb 24 01:09:06 PDT 2022 Ken Pizzini <ken@gnu.org>
+	* dc/eval.c: Major rewrite of how recursion is handled.
+
+	  Recursion within GNU dc had been handled by using recursion in C.
+	  This has had some problems:
+	     . C's stack is typically more limited in capacity than the heap (the
+	       OS will SEGV what it thinks is a run-away stack)
+	     . running out of stack space is handled less gracefully than
+	       running out of heap (SEGV vs. error-return from allocation call)
+	     . the code in dc/eval.c for managing the unwinding of recursion
+	       has accumulated a lot of cruft over the years to handle various
+	       special cases, and has become quite brittle
+
+	  This rewrite now handles the dc evaluation stack by using a linked-list
+	  on the C heap.  There is not much of a net difference in code quantity,
+	  but the code should be clearer to read and understand, and consequently
+	  less prone to breakage during minor edits.  Also, the "out of memory"
+	  condition should be friendlier (an error message, rather than a
+	  core-dumping signal) for those who create a run-away non-tail-recursive
+	  dc script.
+
+	  Incidental to this change, the dc command "0Q" is now a no-op (thanks
+	  to Ralph Corderoy for noting this shortcoming of earlier versions of
+	  GNU dc), and hopefully Q-related bugs (as seen over the years) should
+	  stop recurring (due to less brittle code).
+
+Fri Oct 22 14:26:04 PDT 2021 Ken Pizzini <ken@gnu.org>
+	* dc/eval.c: print the "unimplemented" error message to correct stream
+	  (i.e., stderr).  Thanks to "stasoid" for the bug report.
+
+Mon Nov 16 15:23:48 PST 2020 Ken Pizzini <ken@gnu.org>
+	* bc.1 bc.texi: update BC_MAX_BASE documentation to reflect change
+	  to code which was logged on 1992-01-04.  :-)
+
+Sun Nov 15 21:27:47 PST 2020 Ken Pizzini <ken@gnu.org>
+	* README bc/main.c: mention the bug reporting address in additional
+	  places besides the info and man pages (i.e., in the README and
+	  the "bc --help" output).
+
+Sun Nov 15 21:24:15 PST 2020 Ken Pizzini <ken@gnu.org>
+	* dc/dc.c: report version number more sanely (mention bc version
+	  _after_ dc version, not in the middle of it).
+
+Sun Sep 13 15:01:08 PDT 2020 Ken Pizzini <ken@gnu.org>
+	* dc/dc.c dc/eval.c dc/stack.c: Fix more typos in the comments,
+	  with continuing thanks to Annie Yousar for the bug reports.
+
+Fri Sep 11 23:32:41 PDT 2020 Ken Pizzini <ken@gnu.org>
+	* doc/dc.1 doc/dc.texi: Improve description of how arrays are stacked
+	  alongside scalars.  Thanks to Annie Yousar for pointing out the
+	  poor wording in the previous revison.
+
+Wed Sep  2 14:20:55 PDT 2020 Ken Pizzini <ken@gnu.org>
+	* dc/stack.c: If a register gets allocated by use of array operations,
+	  its top-of-stack value will be in the UNINITIALIZED state.  Attempts
+	  to read this register as a scalar should be treated the same as if
+	  the register itself were never allocated (i.e., return a 0).  Fixed.
+	  Thanks to Annie Yousar for the bug report.
+
+Fri Aug 28 15:30:18 PDT 2020 Ken Pizzini <ken@gnu.org>
+	* dc/dc-regdef.h dc/eval.c dc/numeric.c: fix typos in comments.
+	  Thanks to Annie Yousar for the bug report.
+
+Tue Aug  4 01:48:15 PDT 2020 Ken Pizzini <ken@gnu.org>
+	* doc/dc.1 doc/dc.texi: change confusing use of "divide ... from" to
+	  more standard (and hence clearer) terminology "divide .. by" in the
+	  description of division.  Thanks to Abner Gershon and
+	  Annie Yousar for the bug report.
+
+Thu Feb 20 00:30:38 PST 2020 Ken Pizzini <ken@gnu.org>
+	* dc/numeric.c: fix a (very long-standing) memory leak bug in
+	  dc_getnum() processing input that includes a radix point.
+	  Thanks to David Owen for the clear report.
+
+Tue Oct 30 16:43:15 PDT 2018 Ken Pizzini <ken@gnu.org>
+	* dc/misc.c, configure.ac: add compile-time option to disable the `!'
+	  command.  Requested by Mike Frysinger (of the Gentoo project) as a
+	  sandboxing feature.  Note that the `!' command is a historical
+	  artifact of pre-job-control days, and is an odd bolt-on not well
+	  integrated with the rest of dc, so I'm considering deprecating its
+	  support in main-line also.
+
+Tue Oct 30 16:43:15 PDT 2018 Ken Pizzini <ken@gnu.org>
+	* doc/dc.1: Add description of DC_LINE_LENGTH environment variable.
+	  Add "See Also" of the dc.texi page.  (Thanks to Rick Richardson
+	  for the bug report.)
+
+Non Apr 23 13:28:58 PDT 2018 Ken Pizzini <ken@gnu.org>
+	* dc/eval.c: the reset_and_exit_quit label was placed on
+	  the wrong branch in dc_evalfile(), causing an error exit
+	  for the non-error case of evaluating a "q" or "Q" command.
+	  (Thanks to David Reiss for the bug report.)
+
+Sun Mar 25 23:41:15 PDT 2018 Ken Pizzini <ken@gnu.org>
+	* doc/dc.texi, doc/dc.1: re-work text describing the deprecation
+	  of the 'a' command.
+
+Sat Mar 10 11:58:41 PST 2018 Ken Pizzini <ken@gnu.org>
+	* dc/eval.c: the signal handling code was a bit muddy;
+	  replace with functionally equivalent code that is clearer.
+
+Sun Feb 25 15:38:23 PST 2018 Ken Pizzini <ken@gnu.org>
+	* dc/array.c: be more careful about avoiding or detecting
+	  integer overflow.
+
+Sat Feb 24 21:58:40 PST 2018 Ken Pizzini <ken@gnu.org>
+	* dc/array.c: complete re-design of the implementation of
+	  dc arrays --- now uses hash tables instead of linked lists,
+	  for better run-time behavior for non-trivial arrays.
+	  (The old implementation was originally intended to only
+	  be a placeholder, and had quadratic-time behavior for
+	  some access patterns.)
+
+Sat Feb 24 21:41:06 PST 2018 Ken Pizzini <ken@gnu.org>
+	* dc/dc-proto.h, dc/eval.c, dc/numeric.c, dc/stack.c, dc/string.c:
+	  drop the extraneous dc_discard flag from the dc_dump_num(),
+	  dc_tell_length(), and dc_tell_scale() functions; these functions
+	  will now unconditionally discard the datum passed to them.
+
+Sat Feb 24 21:20:16 PST 2018 Ken Pizzini <ken@gnu.org>
+	* dc/array.c dc/dc.c dc/dc.h dc/eval.c dc/misc.c dc/numeric.c
+	  dc/stack.c dc/string.c: make inclusion of dc-proto.h implicit
+	  wherever dc.h is included
+
+Sat Feb 17 16:53:11 PST 2018 Ken Pizzini <ken@gnu.org>
+	* dc/numeric.c: always emit a diagnostic for domain errors
+	  encountered with the `|' operator.  (Bug reported by
+	  Jeff Epler.)
+
+Wed May 10 15:43:56 PDT 2017 Ken Pizzini <ken@gnu.org>
+	* dc/dc-proto.h, dc/dc.c, dc/eval.c, dc/misc.c: Notice output errors
+	  more promptly, rather than always deferring until exit time.  This
+	  keeps an infinite "print" loop to a file on a full file system from
+	  spinning uselessly.
+	* dc/dc-regdef.h: only #include <limits.h> if DC_REGCOUNT is undefined
+
+Sun May  7 18:54:54 PDT 2017 Ken Pizzini <ken@gnu.org>
+	* dc/*: I should note that the recent changes were inspired
+	  by an e-mail conversation with David José back in November.
+	  He pointed out various corner cases where error-handling was
+	  inconsistent between dc commands.  The recently committed code
+	  is quite different from the various patches generated during
+	  that conversation, but it all serves the aims of improving
+	  consistency of behavior in error handling, and improving
+	  the readability and maintainability of the code.  So,
+	  Thanks, David José!
+
+Sun May  7 18:53:29 PDT 2017 Ken Pizzini <ken@gnu.org>
+	* dc/eval.c: the deprecation warning for 'a' was too
+	  noisy; print it once-only per invocation of dc
+	* doc/dc.texi, doc/dc.1: mention deprecation of 'a' command
+
+Sun May  7 18:18:23 PDT 2017 Ken Pizzini <ken@gnu.org>
+	* dc/dc.c, dc/dc.h, dc/eval.c, doc/dc.1, doc/dc.texi:
+	  Add --max-recursion=$depth command-line option,
+	  per request by Hanno Bőck (to help protect from
+	  run-away fuzz testing).
+
+Sun May  7 16:50:52 PDT 2017 Ken Pizzini <ken@gnu.org>
+	* dc/dc-proto.h, dc/eval.c, dc/numeric.c, dc/stack.c: Eliminated
+	  the (no longer useful) discard_p argument to dc_num2int()
+
+Sun May  7 16:15:36 PDT 2017 Ken Pizzin
+	* dc/eval.c: re-order cases of big switch statement in dc_func(),
+	  for better logical chunking
+	* dc/dc-proto.h, dc/eval.c, dc/misc.c, dc/numeric.c, dc/stack.c:
+	  add dc_warn() function to de-clutter calls to common-case warnings
+	* dc/stack.c, dc/proto.h: delete extraneous #include and prototypes;
+	  improve comment for dc_top_of_stack() documentation
+	* dc/numeric.c: catch and report domain error in dc_exp()
+	* dc/stack.c: Introduce dc_get_N_numbers() and dc_discard_TOS()
+	  helper functions.  Use them to simplify the various dc_*op()
+	  functions; also add new dc_monop() function to that set.
+	* dc/eval.c, dc/dc-proto.h, dc/stack.c: major rewrite of input
+	  handling in eval.c, plus change to dc_cmpop() interface,
+	  for improved (simpler) code
+
+Sun May  7 12:57:04 PDT 2017 Ken Pizzini <ken@gnu.org>
+	* dc/Makefile.am, dc/dc-proto.h, dc/dc.h, dc/array.c, dc/dc.c,
+	  dc/eval.c, dc/misc.c, dc/numeric.c, dc/stack.c, dc/string.c:
+	  More cosmetic clean-up changes:
+	    . a stylistic change: instead of explicitly comparing against
+	      NULL, just treat NULL-ness as a boolean truth value
+	    . be explicit about in-tree #include paths, instead of using
+	      -I compiler flags
+	    . add missing editor hints about tab-widths to dc.h
+	  The stripped dc executable remains bitwise identical to
+	  one built from the dc-1.4.1 (bc-1.07.1) sources.
+	  Substantive changes to follow...
+
+Sat May  6 21:57:10 PDT 2017 Ken Pizzini <ken@gnu.org>
+	* dc/dc.h, dc/dc-proto.h, dc/Concerns, dc/dc-regdef.h, dc/array.c,
+	  dc/dc.c, dc/eval.c, dc/misc.c, dc/numeric.c, bcmath/msrc/h_body,
+	  dc/stack.c, dc/string.c: code clean-up
+	   . Discontinue support for pre-ANSI (1989) dialects of C in dc;
+	     this means eliminate many #ifdef protected #include
+	     directives, and committing to "modern" function prototypes.
+	   . Some whitespace clean-up.
+	   . Add some (void) casts to emphasize that we are
+	     intentionally ignoring return values from  system().
+	   . Add prototypes for the callback shims in lib/number.c .
+	  Note that all of these changes are cosmetic; this was
+	  proven by doing a "cmp" on the (stripped) before- and after-
+	  builds of the dc executable.
+
 Fri Apr  7 15:14:43 PDT 2017  Phil Nelson <philnelson@acm.org>
 	* NEWS: update for 1.07.1 and 1.4.1
 	* FAQ: add a couple new FAQs.
-	* doc/bc.1: change doucumentation of length() and correctly
+	* doc/bc.1: change documentation of length() and correctly
 	  represent newline.
-	* doc/bc.texi: change doucumentation of length()
+	* doc/bc.texi: change documentation of length()
 
 
 Fri Apr  7 13:43:31 PDT 2017 Ken Pizzini <ken@gnu.org>
@@ -11,7 +315,7 @@ Fri Apr  7 13:43:31 PDT 2017 Ken Pizzini <ken@gnu.org>
 	  update dc copyright year list
 
 Fri Apr  7 13:14:41 PDT 2017 Phil Nelson <philnelson@acm.org>
-	* bc/Makefie.am: Do a different fix for parallel make issues.
+	* bc/Makefile.am: Do a different fix for parallel make issues.
 
 Fri Apr  7 00:11:49 PDT 2017 Ken Pizzini <ken@gnu.org>
 	* dc/eval.c, dc/numeric.c: take more care to never pass
@@ -37,7 +341,7 @@ Thu Apr  6 14:26:27 PDT 2017 Ken Pizzini <ken@gnu.org>
 	  existing (and correct) code.  Let's try this again (sigh).
 
 Thu Apr  6 13:11:15 PDT 2017 Ken Pizzini <ken@gnu.org>
-	* dc/dc.c: bah, nevermind; just re-disovered commit of
+	* dc/dc.c: bah, nevermind; just re-discovered commit of
 	  Oct 26, 2013 where the setvbuf() was rendered unnecessary
 	  by introduction of explicit fflush()-es.
 
